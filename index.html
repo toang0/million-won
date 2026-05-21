@@ -13,6 +13,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="100만원 모으기">
 <meta name="mobile-web-app-capable" content="yes">
+<!-- 글씨체: Pretendard (가독성 좋은 한글 폰트) -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
   :root{
     --bg:#f4f6fb; --card:#fff; --ink:#2b2f3a; --sub:#7c8499; --line:#eceef4;
@@ -22,9 +25,13 @@
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0}
-  body{font-family:-apple-system,BlinkMacSystemFont,"Malgun Gothic","Segoe UI",sans-serif;
-    background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;
+  body{font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,"Apple SD Gothic Neo","Malgun Gothic","Segoe UI",sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.55;letter-spacing:-0.2px;
+    -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+    word-break:keep-all;overflow-wrap:break-word;
     -webkit-user-select:none;-moz-user-select:none;user-select:none;-webkit-touch-callout:none}
+  /* 금액 숫자는 자리수 정렬되게 */
+  .amount,.stat .val,.item .amt,.remain,.goalline{font-variant-numeric:tabular-nums}
   /* 버튼/UI 텍스트는 드래그 선택 안 되게, 입력칸만 선택·복사 허용 */
   input,textarea{-webkit-user-select:text;-moz-user-select:text;user-select:text;-webkit-touch-callout:default}
   .wrap{max-width:480px;margin:0 auto;padding:14px 16px 70px}

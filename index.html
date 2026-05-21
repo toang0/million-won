@@ -90,7 +90,10 @@
     .row2{flex-direction:column;gap:0}
     .row2 .field{flex:1 1 auto}
   }
-  input[type=date]{max-width:100%;min-height:48px}
+  input[type=date]{max-width:100%;min-height:48px;text-align:left}
+  /* iOS: 날짜 값이 가운데로 쏠리는 것 → 다른 칸처럼 왼쪽 정렬 */
+  input[type=date]::-webkit-date-and-time-value{text-align:left;margin:0}
+  input[type=date]::-webkit-datetime-edit{text-align:left}
   .btn{width:100%;border:0;border-radius:14px;padding:14px;font-size:16px;font-weight:800;color:#fff;cursor:pointer;transition:transform .1s,filter .15s}
   .btn:active{transform:scale(.98)} .btn:hover{filter:brightness(1.05)}
   .btn.primary{background:linear-gradient(135deg,var(--brand),#4a7ad6)}

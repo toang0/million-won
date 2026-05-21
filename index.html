@@ -92,7 +92,8 @@
   }
   /* 단일 줄 입력칸 높이 통일 (날짜 칸만 커 보이던 문제 방지) */
   input[type=text],input[type=number],input[type=date]{height:48px}
-  input[type=date]{max-width:100%;text-align:left}
+  /* iOS는 날짜칸을 네이티브 컨트롤로 그려 height/padding을 무시함 → 외형 해제해 금액/메모와 동일한 박스로 */
+  input[type=date]{max-width:100%;width:100%;text-align:left;-webkit-appearance:none;appearance:none;line-height:normal}
   /* iOS: 날짜 값이 가운데로 쏠리는 것 → 다른 칸처럼 왼쪽 정렬 */
   input[type=date]::-webkit-date-and-time-value{text-align:left;margin:0}
   input[type=date]::-webkit-datetime-edit{text-align:left}

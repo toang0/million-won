@@ -84,7 +84,13 @@
   input[type=text],input[type=number],input[type=date],textarea{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;font-size:16px;color:var(--ink);background:#fbfcfe;outline:none;transition:.15s;font-family:inherit}
   textarea{resize:vertical;min-height:80px;line-height:1.5}
   input:focus,textarea:focus{border-color:var(--brand);background:#fff}
-  .row2{display:flex;gap:10px} .row2 .field{flex:1}
+  .row2{display:flex;gap:10px} .row2 .field{flex:1;min-width:0}
+  /* 모바일(특히 iOS): 날짜 입력칸이 좁은 칸을 비집고 나오는 문제 → 메모/날짜 세로로 쌓기 */
+  @media (max-width:480px){
+    .row2{flex-direction:column;gap:0}
+    .row2 .field{flex:1 1 auto}
+  }
+  input[type=date]{max-width:100%;min-height:48px}
   .btn{width:100%;border:0;border-radius:14px;padding:14px;font-size:16px;font-weight:800;color:#fff;cursor:pointer;transition:transform .1s,filter .15s}
   .btn:active{transform:scale(.98)} .btn:hover{filter:brightness(1.05)}
   .btn.primary{background:linear-gradient(135deg,var(--brand),#4a7ad6)}

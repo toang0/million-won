@@ -90,7 +90,9 @@
     .row2{flex-direction:column;gap:0}
     .row2 .field{flex:1 1 auto}
   }
-  input[type=date]{max-width:100%;min-height:48px;text-align:left}
+  /* 단일 줄 입력칸 높이 통일 (날짜 칸만 커 보이던 문제 방지) */
+  input[type=text],input[type=number],input[type=date]{height:48px}
+  input[type=date]{max-width:100%;text-align:left}
   /* iOS: 날짜 값이 가운데로 쏠리는 것 → 다른 칸처럼 왼쪽 정렬 */
   input[type=date]::-webkit-date-and-time-value{text-align:left;margin:0}
   input[type=date]::-webkit-datetime-edit{text-align:left}

@@ -1,0 +1,15 @@
+{
+  "name": "100만원 모으기",
+  "short_name": "모으기",
+  "description": "절약하고 모은 돈을 기록하며 목표를 채워가는 저금 챌린지 앱",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f6fb",
+  "theme_color": "#5b8def",
+  "lang": "ko",
+  "icons": [
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

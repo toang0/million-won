@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#5b8def">
+<title>100만원 모으기 💰</title>
+<!-- PWA: 폰 홈화면에 설치 가능 -->
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="100만원 모으기">
+<meta name="mobile-web-app-capable" content="yes">
+<style>
+  :root{
+    --bg:#f4f6fb; --card:#fff; --ink:#2b2f3a; --sub:#7c8499; --line:#eceef4;
+    --brand:#5b8def; --frugal:#3bc9a7; --saving:#ff9f68;
+    --gold:#ffcf5c; --gold2:#ffb347; --danger:#ff6b6b;
+    --shadow:0 8px 24px rgba(40,55,90,.08);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Malgun Gothic","Segoe UI",sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;
+    -webkit-user-select:none;-moz-user-select:none;user-select:none;-webkit-touch-callout:none}
+  /* 버튼/UI 텍스트는 드래그 선택 안 되게, 입력칸만 선택·복사 허용 */
+  input,textarea{-webkit-user-select:text;-moz-user-select:text;user-select:text;-webkit-touch-callout:default}
+  .wrap{max-width:480px;margin:0 auto;padding:14px 16px 70px}
+  .hidden{display:none!important}
+
+  header h1{font-size:20px;margin:6px 0 2px;font-weight:800;letter-spacing:-.3px}
+  header .tag{color:var(--sub);font-size:13px}
+
+  .card{background:var(--card);border-radius:20px;padding:20px;box-shadow:var(--shadow);margin-top:16px}
+
+  /* TABS */
+  .tabs{display:flex;gap:8px;margin-top:14px}
+  .tabs button{flex:1;border:0;background:#eef1f8;color:var(--sub);font-weight:700;font-size:14px;
+    padding:11px;border-radius:12px;cursor:pointer;transition:.15s}
+  .tabs button.on{background:var(--brand);color:#fff;box-shadow:0 4px 12px rgba(91,141,239,.3)}
+
+  /* HERO */
+  .hero{text-align:center;background:linear-gradient(160deg,#eaf1ff,#fff7ee);position:relative;overflow:hidden}
+  .hero.done{background:linear-gradient(160deg,#fff3d6,#ffe9cf)}
+  .amount{font-size:33px;font-weight:900;letter-spacing:-1px;line-height:1.1}
+  .amount .cur{font-size:18px;font-weight:700;color:var(--sub);margin-right:2px}
+  .goalline{font-size:13px;color:var(--sub);margin-top:4px}
+  .goalline b{color:var(--brand)}
+  .bar{height:14px;background:#e9edf6;border-radius:99px;overflow:hidden;margin:14px 0 6px}
+  .bar>i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--gold),var(--gold2));width:0;transition:width .7s cubic-bezier(.2,.8,.2,1)}
+  .pct{font-weight:800;color:var(--gold2)}
+  .remain{font-size:13px;color:var(--sub);margin-top:2px}
+  .cheer{margin-top:12px;font-size:14px;font-weight:600;color:var(--brand);min-height:20px}
+  .purpose{margin-top:10px;font-size:13px;background:#fff;border-radius:12px;padding:9px 12px;
+    color:#5a5f6e;box-shadow:inset 0 0 0 1px var(--line)}
+  .purpose b{color:var(--ink)}
+
+  /* JAR */
+  .jar{width:118px;height:140px;margin:6px auto 4px;position:relative}
+  .jar .lid{position:absolute;top:0;left:50%;transform:translateX(-50%);width:62px;height:14px;background:#c9d3e6;border-radius:6px;z-index:3}
+  .jar .lid:after{content:"";position:absolute;top:12px;left:50%;transform:translateX(-50%);width:48px;height:8px;background:#d7dff0;border-radius:0 0 6px 6px}
+  .jar .glass{position:absolute;top:18px;left:50%;transform:translateX(-50%);width:94px;height:120px;border:3px solid #d3ddf0;border-radius:14px 14px 26px 26px;background:rgba(255,255,255,.4);overflow:hidden}
+  .jar .fill{position:absolute;left:0;bottom:0;width:100%;background:linear-gradient(180deg,var(--gold),var(--gold2));height:0;transition:height .8s cubic-bezier(.2,.8,.2,1)}
+  .jar .fill:before{content:"";position:absolute;top:-8px;left:0;width:200%;height:14px;background:radial-gradient(circle at 10px -2px,transparent 8px,var(--gold) 9px) repeat-x;background-size:20px 14px;opacity:.7;animation:wave 3s linear infinite}
+  @keyframes wave{to{transform:translateX(-20px)}}
+  .jar .coins{position:absolute;bottom:6px;width:100%;text-align:center;font-size:14px;z-index:2}
+
+  /* STATS */
+  .stats{display:flex;gap:10px;margin-top:16px}
+  .stat{flex:1;background:var(--card);border-radius:16px;padding:14px;box-shadow:var(--shadow);text-align:center}
+  .stat .lbl{font-size:12px;color:var(--sub);font-weight:600}
+  .stat .val{font-size:17px;font-weight:800;margin-top:3px}
+  .stat.frugal .val{color:var(--frugal)} .stat.saving .val{color:var(--saving)}
+
+  /* FORM */
+  .seg{display:flex;background:#eef1f8;border-radius:12px;padding:4px;margin-bottom:12px}
+  .seg button{flex:1;border:0;background:transparent;padding:9px;border-radius:9px;font-size:14px;font-weight:700;color:var(--sub);cursor:pointer;transition:.15s}
+  .seg button.on[data-type="frugal"]{background:#fff;color:var(--frugal);box-shadow:0 2px 6px rgba(0,0,0,.06)}
+  .seg button.on[data-type="saving"]{background:#fff;color:var(--saving);box-shadow:0 2px 6px rgba(0,0,0,.06)}
+  .field{margin-bottom:10px}
+  .field label{display:block;font-size:12px;color:var(--sub);font-weight:600;margin-bottom:4px}
+  input[type=text],input[type=number],input[type=date],textarea{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;font-size:16px;color:var(--ink);background:#fbfcfe;outline:none;transition:.15s;font-family:inherit}
+  textarea{resize:vertical;min-height:80px;line-height:1.5}
+  input:focus,textarea:focus{border-color:var(--brand);background:#fff}
+  .row2{display:flex;gap:10px} .row2 .field{flex:1}
+  .btn{width:100%;border:0;border-radius:14px;padding:14px;font-size:16px;font-weight:800;color:#fff;cursor:pointer;transition:transform .1s,filter .15s}
+  .btn:active{transform:scale(.98)} .btn:hover{filter:brightness(1.05)}
+  .btn.primary{background:linear-gradient(135deg,var(--brand),#4a7ad6)}
+  .btn.gold{background:linear-gradient(135deg,var(--gold2),#ff9b2f)}
+  .addbtn{margin-top:6px}
+
+  .sechead{display:flex;justify-content:space-between;align-items:baseline;margin:22px 4px 6px}
+  .sechead h2{font-size:16px;margin:0;font-weight:800}
+  .sechead .cnt{font-size:12px;color:var(--sub)}
+
+  .item{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:14px;padding:13px 14px;box-shadow:var(--shadow);margin-bottom:9px;animation:pop .25s ease}
+  @keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .chip{font-size:11px;font-weight:800;padding:4px 8px;border-radius:99px;white-space:nowrap}
+  .chip.frugal{background:#e3f8f2;color:var(--frugal)} .chip.saving{background:#fff0e6;color:var(--saving)}
+  .item .mid{flex:1;min-width:0}
+  .item .memo{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .item .date{font-size:11px;color:var(--sub);margin-top:2px}
+  .item .amt{font-size:15px;font-weight:800;white-space:nowrap}
+  .item .amt.frugal{color:var(--frugal)} .item .amt.saving{color:var(--saving)}
+  .item .del{border:0;background:transparent;color:#c4cad6;font-size:18px;cursor:pointer;padding:2px 4px;line-height:1}
+  .item .del:hover{color:var(--danger)}
+  .empty{text-align:center;color:var(--sub);font-size:14px;padding:30px 10px;line-height:1.7}
+
+  /* DONE state CTA */
+  .donecta{text-align:center}
+  .donecta .big{font-size:22px;font-weight:900;margin:6px 0}
+
+  /* HALL */
+  .hallcard{background:var(--card);border-radius:18px;padding:18px;box-shadow:var(--shadow);margin-bottom:14px;position:relative;overflow:hidden;cursor:pointer;transition:transform .12s,box-shadow .12s}
+  .hallcard:active{transform:scale(.99)}
+  .hallcard:hover{box-shadow:0 12px 30px rgba(40,55,90,.13)}
+  .hallcard.active{box-shadow:0 0 0 2px var(--brand),var(--shadow)}
+  .hallcard .ribbon{position:absolute;top:12px;right:-30px;transform:rotate(35deg);background:var(--gold2);color:#fff;font-size:11px;font-weight:800;padding:3px 34px}
+  .hallcard .ribbon.prog{background:var(--brand)}
+  .hallcard .hgoal{font-size:20px;font-weight:900}
+  .hallcard .hpurpose{font-size:13.5px;color:#5a5f6e;margin:6px 0;background:#f7f9fd;border-radius:10px;padding:9px 12px}
+  .hallcard .hspeech{font-size:13.5px;color:var(--ink);font-style:italic;border-left:3px solid var(--gold2);padding:4px 0 4px 10px;margin:8px 0}
+  .hallcard .hmeta{font-size:11px;color:var(--sub);margin-top:8px}
+
+  /* MODAL */
+  .overlay{position:fixed;inset:0;background:rgba(30,38,60,.55);z-index:80;display:flex;align-items:flex-end;justify-content:center;padding:0;backdrop-filter:blur(2px)}
+  .sheet{background:#fff;width:100%;max-width:480px;border-radius:24px 24px 0 0;padding:24px 20px 28px;animation:up .3s cubic-bezier(.2,.8,.2,1);max-height:92vh;overflow:auto}
+  @keyframes up{from{transform:translateY(100%)}to{transform:none}}
+  .sheet h2{margin:0 0 4px;font-size:19px;font-weight:900}
+  .sheet p.s{color:var(--sub);font-size:13px;margin:0 0 16px}
+  .goalgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+  .goalgrid button{border:1.5px solid var(--line);background:#fbfcfe;border-radius:12px;padding:13px 4px;font-weight:800;font-size:14px;color:var(--ink);cursor:pointer;transition:.12s}
+  .goalgrid button.on{border-color:var(--brand);background:#eef4ff;color:var(--brand)}
+
+  /* INTRO */
+  .introbg{position:fixed;inset:0;z-index:90;background:linear-gradient(165deg,#fff8ec 0%,#eaf1ff 100%);display:flex;align-items:center;justify-content:center;padding:24px;overflow:auto}
+  .introcard{max-width:430px;text-align:center}
+  .introcard .ico{font-size:54px}
+  .introcard h1{font-size:24px;font-weight:900;margin:10px 0 16px}
+  .introcard .story{background:rgba(255,255,255,.7);border:1px dashed #ffd98a;border-radius:18px;padding:20px;text-align:left;font-size:14.5px;color:#4a4f5e;line-height:1.75}
+  .introcard .story b{color:var(--gold2)}
+  .introcard .sign{text-align:right;font-weight:700;color:var(--gold2);margin-top:10px;font-size:13px}
+  .introcard .btn{margin-top:20px}
+
+  footer{text-align:center;color:#aab1c2;font-size:11px;margin-top:30px}
+  #cv{position:fixed;inset:0;pointer-events:none;z-index:95}
+  .toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:99px;font-size:14px;font-weight:700;opacity:0;transition:.3s;z-index:100;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .linklike{color:var(--brand);font-size:12px;font-weight:700;cursor:pointer}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<!-- ===== INTRO (사연) ===== -->
+<div class="introbg" id="intro">
+  <div class="introcard">
+    <div class="ico">📱💸</div>
+    <h1>100만원 모으기</h1>
+    <div class="story">
+      이제 막 취업한 어느 직장인이, 그만 직장 동료의 휴대폰을 고장 내고 말았다.<br><br>
+      날아온 청구서에 적힌 금액… <b>96만원</b>. 쌩돈이었다.<br><br>
+      그는 다짐했다. 절약하고 모은 돈이 <b>100만원</b>이 될 때까지
+      이 앱을 쓰겠다고. 한 푼 한 푼이 다시 일어서는 길이라 믿으면서.
+      <div class="sign">— 어느 직장인 開發者 드림</div>
+    </div>
+    <button class="btn gold" id="startBtn">100만원 모으기 시작하기 💪</button>
+  </div>
+</div>
+
+<div class="wrap" id="app">
+  <header>
+    <h1 id="appTitle">100만원 모으기 💰</h1>
+    <div class="tag">절약하고, 모으고, 채워나가요</div>
+  </header>
+
+  <div class="tabs">
+    <button id="tabNow" class="on">지금 도전</button>
+    <button id="tabHall">🏆 명예의 전당</button>
+  </div>
+
+  <!-- ===== NOW VIEW ===== -->
+  <div id="viewNow">
+    <!-- 진행 중일 때 -->
+    <div id="activeBox">
+      <section class="card hero" id="hero">
+        <div class="jar"><div class="lid"></div><div class="glass"><div class="fill" id="fill"></div></div><div class="coins">🪙</div></div>
+        <div class="amount"><span class="cur">₩</span><span id="total">0</span></div>
+        <div class="goalline">목표 <b id="goalText">1,000,000원</b></div>
+        <div class="bar"><i id="bar"></i></div>
+        <div class="remain">진행률 <span class="pct" id="pct">0%</span> · 남은 금액 <span id="remain">1,000,000</span>원</div>
+        <div class="cheer" id="cheer"></div>
+        <div class="purpose" id="purposeBox"></div>
+      </section>
+
+      <!-- 달성 CTA -->
+      <section class="card hero done donecta hidden" id="doneCta">
+        <div class="jar"><div class="lid"></div><div class="glass"><div class="fill" style="height:100%"></div></div><div class="coins">🪙✨</div></div>
+        <div class="big">🎉 목표 달성!</div>
+        <div style="color:#7a6a3a;font-size:14px;margin-bottom:14px">정말 멋져요. 이 순간을 기록으로 남겨볼까요?</div>
+        <button class="btn gold" id="speechBtn">🏆 수상소감 남기고 완료하기</button>
+      </section>
+
+      <div class="stats">
+        <div class="stat frugal"><div class="lbl">💸 절약한 돈</div><div class="val" id="sumFrugal">0원</div></div>
+        <div class="stat saving"><div class="lbl">🐷 모은 돈</div><div class="val" id="sumSaving">0원</div></div>
+      </div>
+
+      <section class="card" id="formCard">
+        <div class="seg">
+          <button data-type="frugal" class="on">💸 절약했어요</button>
+          <button data-type="saving">🐷 저축했어요</button>
+        </div>
+        <div class="field"><label>금액 (원)</label><input type="number" id="amount" inputmode="numeric" placeholder="예: 3000"/></div>
+        <div class="row2">
+          <div class="field" style="flex:1.6"><label>한줄 메모</label><input type="text" id="memo" placeholder="예: 택시 안 타고 걸음" maxlength="40" spellcheck="false" autocomplete="off" autocapitalize="off"/></div>
+          <div class="field"><label>날짜</label><input type="date" id="date"/></div>
+        </div>
+        <button class="btn primary addbtn" id="add">기록 추가하기</button>
+      </section>
+
+      <div class="sechead"><h2>📋 기록</h2><span class="cnt" id="cnt"></span></div>
+      <div id="list"></div>
+    </div>
+
+    <!-- 도전이 없을 때 (모두 완료 후) -->
+    <section class="card hero hidden" id="newChallengeBox" style="text-align:center">
+      <div class="ico" style="font-size:46px">🚀</div>
+      <div style="font-weight:900;font-size:19px;margin:8px 0 4px">새로운 도전을 시작해볼까요?</div>
+      <div style="color:var(--sub);font-size:13.5px;margin-bottom:16px">목표 금액을 고르고, 이 돈을 모으는 이유를 적어주세요.</div>
+      <button class="btn primary" id="newBtn">+ 새 도전 시작하기</button>
+    </section>
+
+    <!-- 잠깐 쉬는 중 -->
+    <section class="card hero hidden" id="restBox" style="text-align:center;background:linear-gradient(160deg,#e7f7ef,#eaf1ff)">
+      <div class="ico" style="font-size:48px">🌴</div>
+      <div style="font-weight:900;font-size:19px;margin:8px 0 4px">잠깐 쉬어가는 중이에요</div>
+      <div style="color:var(--sub);font-size:13.5px;margin-bottom:16px">충분히 달려왔어요. 준비되면 언제든 다시 시작해요!</div>
+      <button class="btn primary" id="restNewBtn">+ 새 도전 시작하기</button>
+    </section>
+  </div>
+
+  <!-- ===== HALL VIEW ===== -->
+  <div id="viewHall" class="hidden">
+    <div class="sechead"><h2>🏆 명예의 전당</h2><span class="cnt" id="hallCnt"></span></div>
+    <div id="hallList"></div>
+  </div>
+
+  <div class="linklike" style="text-align:center;margin-top:24px" id="reread">📖 사연 다시 보기</div>
+  <footer>데이터는 이 브라우저에만 저장돼요 · 100만원 모으기</footer>
+</div>
+
+<!-- ===== MODAL HOST ===== -->
+<div id="modalHost"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+  const KEY="mil_state_v2";
+  const $=id=>document.getElementById(id);
+  const krw=n=>n.toLocaleString("ko-KR");
+  // 제목용 금액 표기: 10000000 → "1000만", 100000000 → "1억", 150000000 → "1.5억"
+  function manLabel(n){
+    if(n>=100000000){ const e=n/100000000; return (Number.isInteger(e)?e:e.toFixed(1))+"억"; }
+    if(n>=10000 && n%10000===0) return (n/10000)+"만";
+    return krw(n);
+  }
+  const esc=s=>(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
+  const FIRST_GOAL=1000000;
+  const GOALS=[100000,500000,1000000,2000000,3000000,5000000,10000000];
+
+  // ===== STATE =====
+  let state = load();
+  let curType="frugal", curTab="now";
+  let lastMilestone={}; // challengeId -> milestone
+
+  function load(){
+    try{ const s=JSON.parse(localStorage.getItem(KEY)); if(s&&s.challenges) return s; }catch(e){}
+    // v1 마이그레이션
+    try{
+      const old=JSON.parse(localStorage.getItem("mil_entries_v1")||"[]");
+      if(old.length){
+        return {seenIntro:true,challenges:[{id:"c1",goal:FIRST_GOAL,purpose:"직장 동료 휴대폰값 96만원을 메우고, 다시 일어서기",
+          entries:old,status:"active",started:Date.now(),completed:null,speech:""}]};
+      }
+    }catch(e){}
+    return {seenIntro:false,challenges:[]};
+  }
+  function save(){ try{ localStorage.setItem(KEY,JSON.stringify(state)); }catch(e){ /* file:// 등 저장 불가 환경에서도 화면은 갱신되도록 무시 */ } }
+  const active=()=>state.challenges.find(c=>c.status==="active");
+  const dateNum=ts=>{const d=new Date(ts);const z=n=>String(n).padStart(2,"0");return d.getFullYear()+"."+z(d.getMonth()+1)+"."+z(d.getDate());};
+  function todayStr(){const d=new Date();const z=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+z(d.getMonth()+1)+"-"+z(d.getDate());}
+
+  // ===== INTRO =====
+  function showIntro(){ $("intro").classList.remove("hidden"); }
+  function hideIntro(){ $("intro").classList.add("hidden"); }
+  $("startBtn").onclick=()=>{
+    if(!active() && !state.challenges.length){
+      state.challenges.push({id:"c"+Date.now(),goal:FIRST_GOAL,
+        purpose:"직장 동료 휴대폰값 96만원을 메우고, 다시 일어서기",
+        entries:[],status:"active",started:Date.now(),completed:null,speech:""});
+      state.seenIntro=true; save();
+    }
+    hideIntro(); render();
+  };
+  $("reread").onclick=showIntro;
+
+  // ===== TABS =====
+  $("tabNow").onclick=()=>{curTab="now";render();};
+  $("tabHall").onclick=()=>{curTab="hall";render();};
+
+  // ===== SEGMENT =====
+  document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{
+    document.querySelectorAll(".seg button").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on"); curType=b.dataset.type;
+  });
+  $("date").value=todayStr();
+
+  // ===== ADD ENTRY =====
+  $("add").onclick=()=>{
+    const c=active(); if(!c) return;
+    const amt=parseInt($("amount").value,10);
+    if(!amt||amt<=0){ toast("금액을 입력해 주세요"); $("amount").focus(); return; }
+    c.entries.push({id:Date.now()+""+Math.floor(Math.random()*1000),amount:amt,
+      memo:$("memo").value.trim(),type:curType,date:$("date").value||todayStr()});
+    save(); $("amount").value="";$("memo").value="";
+    toast(curType==="frugal"?"절약 기록 추가! 💸":"저축 기록 추가! 🐷");
+    render();
+  };
+  ["amount","memo"].forEach(id=>$(id).addEventListener("keydown",e=>{if(e.key==="Enter")$("add").click();}));
+
+  function cheerMsg(pct){
+    if(pct>=100) return "🎉 목표 달성! 정말 대단해요!";
+    if(pct>=75)  return "거의 다 왔어요! 마지막 스퍼트 🏃";
+    if(pct>=50)  return "절반 넘었어요! 결승선이 보인다 🏁";
+    if(pct>=25)  return "꾸준함이 무기예요 🔥";
+    if(pct>=10)  return "좋아요, 잘 출발했어요! 🐣";
+    if(pct>0)    return "시작이 반! 첫 걸음 멋져요 👏";
+    return "첫 기록을 남겨볼까요? 💪";
+  }
+
+  // ===== RENDER =====
+  function render(){
+    // 인트로 우선
+    if(!state.seenIntro && !state.challenges.length){ showIntro(); }
+
+    // 제목을 현재 도전 목표(또는 쉬는 중)에 맞춰 갱신
+    const act=active();
+    const titleText = act ? manLabel(act.goal)+"원 모으기 💰"
+                     : state.resting ? "잠깐 쉬는 중 🌴"
+                     : "100만원 모으기 💰";
+    $("appTitle").textContent = titleText;
+    document.title = titleText;
+
+    $("tabNow").classList.toggle("on",curTab==="now");
+    $("tabHall").classList.toggle("on",curTab==="hall");
+    $("viewNow").classList.toggle("hidden",curTab!=="now");
+    $("viewHall").classList.toggle("hidden",curTab!=="hall");
+
+    if(curTab==="hall"){ renderHall(); return; }
+
+    const c=active();
+    if(!c){
+      $("activeBox").classList.add("hidden");
+      $("newChallengeBox").classList.toggle("hidden", !!state.resting);
+      $("restBox").classList.toggle("hidden", !state.resting);
+      return;
+    }
+    $("activeBox").classList.remove("hidden");
+    $("newChallengeBox").classList.add("hidden");
+    $("restBox").classList.add("hidden");
+
+    const total=c.entries.reduce((s,e)=>s+e.amount,0);
+    const sf=c.entries.filter(e=>e.type==="frugal").reduce((s,e)=>s+e.amount,0);
+    const ss=c.entries.filter(e=>e.type==="saving").reduce((s,e)=>s+e.amount,0);
+    const pct=c.goal>0?Math.min(100,total/c.goal*100):0;
+    const reached=total>=c.goal;
+
+    $("total").textContent=krw(total);
+    $("goalText").textContent=krw(c.goal)+"원";
+    $("bar").style.width=pct+"%"; $("fill").style.height=pct+"%";
+    $("pct").textContent=(Math.round(pct*10)/10)+"%";
+    $("remain").textContent=krw(Math.max(0,c.goal-total));
+    $("cheer").textContent=cheerMsg(pct);
+    $("sumFrugal").textContent=krw(sf)+"원"; $("sumSaving").textContent=krw(ss)+"원";
+    $("purposeBox").innerHTML="🎯 <b>이 돈의 목적</b> · "+esc(c.purpose||"—");
+
+    // 달성 시: 일반 hero 숨기고 달성 CTA
+    $("hero").classList.toggle("hidden",reached);
+    $("doneCta").classList.toggle("hidden",!reached);
+    $("formCard").classList.toggle("hidden",reached);
+
+    // 마일스톤 컨페티
+    const ms=[25,50,75,100];
+    const m=ms.filter(x=>pct>=x).pop()||0;
+    if(lastMilestone[c.id]===undefined) lastMilestone[c.id]=m;
+    else if(m>lastMilestone[c.id]){ celebrate(m); lastMilestone[c.id]=m; }
+
+    // 리스트
+    const list=$("list");
+    $("cnt").textContent=c.entries.length?c.entries.length+"건":"";
+    if(!c.entries.length){
+      list.innerHTML='<div class="empty">아직 기록이 없어요.<br>오늘 아낀 한 푼부터 적어볼까요? 🌱</div>';
+    } else {
+      const sorted=[...c.entries].sort((a,b)=>(b.date+b.id).localeCompare(a.date+a.id));
+      list.innerHTML=sorted.map(e=>{
+        const k=e.type,name=k==="frugal"?"절약":"저축";
+        return `<div class="item"><span class="chip ${k}">${name}</span>
+          <div class="mid"><div class="memo">${esc(e.memo)||"(메모 없음)"}</div><div class="date">${e.date}</div></div>
+          <div class="amt ${k}">+${krw(e.amount)}</div>
+          <button class="del" data-id="${e.id}">✕</button></div>`;
+      }).join("");
+      list.querySelectorAll(".del").forEach(b=>b.onclick=()=>{c.entries=c.entries.filter(x=>x.id!==b.dataset.id);save();render();});
+    }
+  }
+
+  function renderHall(){
+    const done=state.challenges.filter(c=>c.status==="done");
+    const act=active();
+    const cards=[];
+    if(act){
+      const t=act.entries.reduce((s,e)=>s+e.amount,0);
+      const p=Math.min(100,t/act.goal*100);
+      cards.push(`<div class="hallcard active" data-cid="${act.id}"><div class="ribbon prog">진행 중</div>
+        <div class="hgoal">${krw(act.goal)}원 도전</div>
+        <div class="hpurpose">🎯 ${esc(act.purpose)}</div>
+        <div class="hmeta">현재 ${krw(t)}원 모음 · ${Math.round(p)}% · ${act.entries.length}건 · 눌러서 기록 보기 ›</div></div>`);
+    }
+    done.slice().reverse().forEach(c=>{
+      const t=c.entries.reduce((s,e)=>s+e.amount,0);
+      cards.push(`<div class="hallcard" data-cid="${c.id}"><div class="ribbon">🏆 달성</div>
+        <div class="hgoal">${krw(c.goal)}원 달성!</div>
+        <div class="hpurpose">🎯 ${esc(c.purpose)}</div>
+        ${c.speech?`<div class="hspeech">“${esc(c.speech)}”</div>`:""}
+        <div class="hmeta">${krw(t)}원 모음 · ${dateNum(c.started)} ~ ${dateNum(c.completed)} · 눌러서 기록 보기 ›</div></div>`);
+    });
+    $("hallCnt").textContent=done.length?done.length+"개 달성":"";
+    $("hallList").innerHTML=cards.length?cards.join(""):
+      '<div class="empty">아직 완료한 도전이 없어요.<br>첫 100만원, 여기에 박제될 거예요 🏆</div>';
+    $("hallList").querySelectorAll("[data-cid]").forEach(el=>el.onclick=()=>openChallengeDetail(el.dataset.cid));
+  }
+
+  // 도전 상세(모았던 기록) 보기
+  function openChallengeDetail(id){
+    const c=state.challenges.find(x=>x.id===id); if(!c) return;
+    const total=c.entries.reduce((s,e)=>s+e.amount,0);
+    const sf=c.entries.filter(e=>e.type==="frugal").reduce((s,e)=>s+e.amount,0);
+    const ss=c.entries.filter(e=>e.type==="saving").reduce((s,e)=>s+e.amount,0);
+    const sorted=[...c.entries].sort((a,b)=>(b.date+b.id).localeCompare(a.date+a.id));
+    const rows = c.entries.length ? sorted.map(e=>{
+      const k=e.type,name=k==="frugal"?"절약":"저축";
+      return `<div class="item"><span class="chip ${k}">${name}</span>
+        <div class="mid"><div class="memo">${esc(e.memo)||"(메모 없음)"}</div><div class="date">${e.date}</div></div>
+        <div class="amt ${k}">+${krw(e.amount)}</div></div>`;
+    }).join("") : '<div class="empty">아직 기록이 없어요 🌱</div>';
+    openModal(`
+      <h2>${krw(c.goal)}원 ${c.status==="done"?"달성 🏆":"도전 진행 중 🔥"}</h2>
+      <p class="s">${dateNum(c.started)}${c.completed?" ~ "+dateNum(c.completed):" ~ 진행 중"}</p>
+      <div class="hpurpose">🎯 ${esc(c.purpose)}</div>
+      ${c.speech?`<div class="hspeech">“${esc(c.speech)}”</div>`:""}
+      <div class="stats" style="margin:14px 0">
+        <div class="stat frugal"><div class="lbl">💸 절약</div><div class="val">${krw(sf)}원</div></div>
+        <div class="stat saving"><div class="lbl">🐷 저축</div><div class="val">${krw(ss)}원</div></div>
+      </div>
+      <div style="text-align:center;font-weight:800;margin-bottom:12px">총 ${krw(total)}원 · ${c.entries.length}건</div>
+      <div style="max-height:42vh;overflow:auto;margin:0 -4px;padding:0 4px">${rows}</div>
+      <button class="btn primary" id="mClose" style="margin-top:14px">닫기</button>
+    `,()=>{ $("mClose").onclick=closeModal; });
+  }
+
+  // ===== 수상소감 모달 =====
+  $("speechBtn").onclick=()=>{
+    const c=active(); if(!c) return;
+    openModal(`
+      <h2>🏆 수상소감</h2>
+      <p class="s">${krw(c.goal)}원 달성을 축하해요! 이 순간의 소감을 남겨주세요.</p>
+      <div class="field"><textarea id="mSpeech" spellcheck="false" placeholder="예: 포기하고 싶을 때마다 96만원 청구서를 떠올렸다. 결국 해냈다!"></textarea></div>
+      <button class="btn gold" id="mDone">완료하고 명예의 전당에 올리기</button>
+    `,()=>{
+      $("mDone").onclick=()=>{
+        c.speech=$("mSpeech").value.trim();
+        c.status="done"; c.completed=Date.now(); save(); closeModal();
+        celebrate(100);
+        toast("명예의 전당에 박제되었어요! 🏆");
+        setTimeout(openNewChallenge,700);
+      };
+    });
+  };
+
+  // ===== 새 도전 모달 =====
+  $("newBtn").onclick=openNewChallenge;
+  $("restNewBtn").onclick=openNewChallenge;
+  function openNewChallenge(){
+    let pick=GOALS[2]; // 기본 100만
+    let custom=false;
+    openModal(`
+      <h2>🚀 새로운 도전</h2>
+      <p class="s">목표 금액을 고르고, 이 돈을 모으는 이유를 적어주세요.</p>
+      <div class="goalgrid" id="gGrid">
+        ${GOALS.map(g=>`<button data-g="${g}" class="${g===pick?'on':''}">${g>=10000?(g/10000)+'만':g}원</button>`).join("")}
+        <button data-g="custom">기타 ✏️</button>
+        <button data-g="rest" class="rest">잠깐 쉬기 🌴</button>
+      </div>
+      <div class="field hidden" id="customWrap">
+        <label>직접 입력 (원)</label>
+        <input type="number" id="customGoal" inputmode="numeric" placeholder="예: 7000000"/>
+      </div>
+      <div class="field"><label>다짐 · 이 돈의 목적</label>
+        <textarea id="mPurpose" spellcheck="false" placeholder="예: 제주도 한 달 살기 자금 모으기 / 비상금 만들기"></textarea></div>
+      <button class="btn primary" id="mCreate">이 목표로 시작하기</button>
+    `,()=>{
+      const grid=$("gGrid");
+      grid.querySelectorAll("button").forEach(b=>b.onclick=()=>{
+        if(b.dataset.g==="rest"){
+          state.resting=true; save(); closeModal(); curTab="now"; render(); toast("🌴 잠깐 쉬어가요");
+          return;
+        }
+        grid.querySelectorAll("button").forEach(x=>x.classList.remove("on"));
+        b.classList.add("on");
+        if(b.dataset.g==="custom"){ custom=true; $("customWrap").classList.remove("hidden"); $("customGoal").focus(); }
+        else { custom=false; pick=parseInt(b.dataset.g,10); $("customWrap").classList.add("hidden"); }
+      });
+      $("mCreate").onclick=()=>{
+        let goal=pick;
+        if(custom){
+          goal=parseInt(($("customGoal").value||"").replace(/[^0-9]/g,""),10);
+          if(!goal||goal<1000){ toast("목표 금액을 1,000원 이상 입력해 주세요"); $("customGoal").focus(); return; }
+        }
+        const purpose=$("mPurpose").value.trim();
+        if(!purpose){ toast("이 돈의 목적을 적어주세요"); $("mPurpose").focus(); return; }
+        state.resting=false;
+        state.challenges.push({id:"c"+Date.now(),goal,purpose,
+          entries:[],status:"active",started:Date.now(),completed:null,speech:""});
+        save(); closeModal(); curTab="now"; render(); toast("새 도전 시작! 화이팅 💪");
+      };
+    });
+  }
+
+  // ===== MODAL 공통 =====
+  function openModal(html,after){
+    $("modalHost").innerHTML=`<div class="overlay" id="ov"><div class="sheet">${html}</div></div>`;
+    $("ov").onclick=e=>{ if(e.target.id==="ov") closeModal(); };
+    if(after) after();
+  }
+  function closeModal(){ $("modalHost").innerHTML=""; }
+
+  // ===== TOAST =====
+  let tt; function toast(m){const t=$("toast");t.textContent=m;t.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),1900);}
+
+  // ===== CONFETTI =====
+  const cv=$("cv"),ctx=cv.getContext("2d");
+  function rs(){cv.width=innerWidth;cv.height=innerHeight;} rs(); addEventListener("resize",rs);
+  function celebrate(m){
+    if(m>=100) toast("🎉 100만원… 같은 큰 산을 넘었어요!");
+    const cols=["#ffcf5c","#5b8def","#3bc9a7","#ff9f68","#ff6b6b"],parts=[];
+    const n=m>=100?160:100;
+    for(let i=0;i<n;i++)parts.push({x:cv.width/2,y:cv.height/3,vx:(Math.random()-.5)*13,vy:Math.random()*-13-4,g:.3+Math.random()*.2,s:6+Math.random()*6,c:cols[i%cols.length],r:Math.random()*6,vr:(Math.random()-.5)*.4});
+    let f=0;(function loop(){ctx.clearRect(0,0,cv.width,cv.height);f++;parts.forEach(p=>{p.vy+=p.g;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r);ctx.fillStyle=p.c;ctx.fillRect(-p.s/2,-p.s/2,p.s,p.s);ctx.restore();});if(f<130)requestAnimationFrame(loop);else ctx.clearRect(0,0,cv.width,cv.height);})();
+  }
+
+  // ===== START =====
+  if(state.seenIntro || state.challenges.length){ hideIntro(); }
+  render();
+})();
+</script>
+<script>
+  // PWA 서비스 워커 등록 (https/localhost에서만 동작)
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function(){
+      navigator.serviceWorker.register("sw.js").catch(function(){});
+    });
+  }
+</script>
+</body>
+</html>

@@ -267,7 +267,10 @@
     <div id="hallList"></div>
   </div>
 
-  <div class="linklike" style="text-align:center;margin-top:24px" id="reread">📖 사연 다시 보기</div>
+  <div style="text-align:center;margin-top:24px;display:flex;gap:20px;justify-content:center;flex-wrap:wrap">
+    <span class="linklike" id="reread">📖 사연 다시 보기</span>
+    <span class="linklike" id="backupBtn">💾 데이터 백업</span>
+  </div>
   <footer>데이터는 이 브라우저에만 저장돼요 · 100만원 모으기</footer>
 </div>
 
@@ -512,6 +515,7 @@
   // ===== 새 도전 모달 =====
   $("newBtn").onclick=openNewChallenge;
   $("restNewBtn").onclick=openNewChallenge;
+  $("backupBtn").onclick=openBackup;
   function openNewChallenge(){
     let pick=GOALS[2]; // 기본 100만
     let custom=false;
@@ -555,6 +559,57 @@
           entries:[],status:"active",started:Date.now(),completed:null,speech:""});
         save(); closeModal(); curTab="now"; render(); toast("새 도전 시작! 화이팅 💪");
       };
+    });
+  }
+
+  // ===== 백업 / 복원 =====
+  function exportData(){
+    return JSON.stringify({app:"million-won",v:2,exportedAt:new Date().toISOString(),state:state});
+  }
+  function tryImport(text){
+    var obj;
+    try{ obj=JSON.parse(text); }catch(e){ toast("백업 코드 형식이 올바르지 않아요"); return; }
+    var s=(obj&&obj.state&&Array.isArray(obj.state.challenges))?obj.state
+         :(obj&&Array.isArray(obj.challenges))?obj:null;
+    if(!s){ toast("백업 데이터를 찾을 수 없어요"); return; }
+    if(!confirm("지금 데이터를 이 백업으로 덮어쓸까요? (되돌릴 수 없어요)")) return;
+    state=s;
+    if(typeof state.resting==="undefined") state.resting=false;
+    if(typeof state.seenIntro==="undefined") state.seenIntro=true;
+    save(); curTab="now"; closeModal(); render(); toast("백업을 불러왔어요! 🎉");
+  }
+  function openBackup(){
+    openModal(`
+      <h2>💾 데이터 백업 / 복원</h2>
+      <p class="s">기기·브라우저가 바뀌면 데이터가 따로 저장돼요. 백업해두면 옮기거나 복구할 수 있어요.</p>
+      <div style="font-weight:800;margin:4px 0 8px">📤 백업하기</div>
+      <button class="btn primary" id="bCopy" style="margin-bottom:8px">📋 백업 코드 복사</button>
+      <button class="btn gold" id="bFile">📁 파일로 저장</button>
+      <div style="font-weight:800;margin:18px 0 8px">📥 복원하기</div>
+      <textarea id="bPaste" spellcheck="false" placeholder="백업 코드를 여기에 붙여넣기" style="margin-bottom:8px"></textarea>
+      <button class="btn primary" id="bRestore" style="margin-bottom:8px">붙여넣은 코드로 복원</button>
+      <label class="btn" id="bFileLabel" style="display:block;background:#eef1f8;color:var(--ink)">📁 파일에서 복원
+        <input type="file" id="bFileIn" accept="application/json,.json" style="display:none">
+      </label>
+      <button class="btn" id="bClose" style="background:transparent;color:var(--sub);margin-top:6px">닫기</button>
+    `,()=>{
+      $("bCopy").onclick=async()=>{
+        var txt=exportData();
+        try{ await navigator.clipboard.writeText(txt); toast("백업 코드를 복사했어요 📋 메모장 등에 붙여 보관하세요"); }
+        catch(e){ var ta=$("bPaste"); ta.value=txt; ta.focus(); ta.select(); toast("아래 칸에 코드를 넣었어요. 길게 눌러 복사하세요"); }
+      };
+      $("bFile").onclick=()=>{
+        var blob=new Blob([exportData()],{type:"application/json"});
+        var d=new Date(),z=n=>String(n).padStart(2,"0");
+        var a=document.createElement("a");
+        a.href=URL.createObjectURL(blob);
+        a.download="million-backup-"+d.getFullYear()+z(d.getMonth()+1)+z(d.getDate())+".json";
+        document.body.appendChild(a); a.click(); a.remove();
+        toast("백업 파일을 저장했어요 📁");
+      };
+      $("bRestore").onclick=()=>{ var v=$("bPaste").value.trim(); if(!v){toast("백업 코드를 붙여넣어 주세요");return;} tryImport(v); };
+      $("bFileIn").onchange=(e)=>{ var f=e.target.files[0]; if(!f) return; var r=new FileReader(); r.onload=()=>tryImport(String(r.result)); r.readAsText(f); };
+      $("bClose").onclick=closeModal;
     });
   }
 

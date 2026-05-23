@@ -202,6 +202,15 @@
 
   <!-- ===== NOW VIEW ===== -->
   <div id="viewNow">
+    <!-- 백업 리마인드 (격주 또는 15건+) -->
+    <section class="card" id="backupReminder" style="display:none;background:#fff7e6;border:1px solid #ffe2ab;box-shadow:0 4px 14px rgba(255,179,71,.18);padding:16px">
+      <div id="brMsg" style="font-size:14px;font-weight:600;color:#8a6a1f">💾 백업할 때가 됐어요</div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn gold" id="brNow" style="flex:1;padding:12px">💾 지금 백업</button>
+        <button class="btn" id="brLater" style="background:#f0ead9;color:#8a6a1f;flex:0 0 auto;padding:12px 18px">나중에</button>
+      </div>
+    </section>
+
     <!-- 진행 중일 때 -->
     <div id="activeBox">
       <section class="card hero" id="hero">
@@ -298,6 +307,11 @@
   let state = load();
   let curType="frugal", curTab="now";
   let lastMilestone={}; // challengeId -> milestone
+  let remindSnoozed=false; // 이번 세션 동안 "나중에" 눌렀는지
+  function totalEntries(){ return state.challenges.reduce(function(s,c){return s+c.entries.length;},0); }
+  // 백업 시점 추적 필드 초기화
+  if(typeof state.lastBackupAt==="undefined") state.lastBackupAt=Date.now();
+  if(typeof state.lastBackupEntryCount==="undefined") state.lastBackupEntryCount=totalEntries();
 
   function load(){
     try{ const s=JSON.parse(localStorage.getItem(KEY)); if(s&&s.challenges) return s; }catch(e){}
@@ -376,6 +390,7 @@
                      : "100만원 모으기 💰";
     $("appTitle").textContent = titleText;
     document.title = titleText;
+    updateBackupReminder();
 
     $("tabNow").classList.toggle("on",curTab==="now");
     $("tabHall").classList.toggle("on",curTab==="hall");
@@ -516,6 +531,8 @@
   $("newBtn").onclick=openNewChallenge;
   $("restNewBtn").onclick=openNewChallenge;
   $("backupBtn").onclick=openBackup;
+  $("brNow").onclick=openBackup;
+  $("brLater").onclick=function(){ remindSnoozed=true; updateBackupReminder(); };
   function openNewChallenge(){
     let pick=GOALS[2]; // 기본 100만
     let custom=false;
@@ -576,8 +593,30 @@
     state=s;
     if(typeof state.resting==="undefined") state.resting=false;
     if(typeof state.seenIntro==="undefined") state.seenIntro=true;
+    if(typeof state.lastBackupAt==="undefined") state.lastBackupAt=Date.now();
+    if(typeof state.lastBackupEntryCount==="undefined") state.lastBackupEntryCount=totalEntries();
     save(); curTab="now"; closeModal(); render(); toast("백업을 불러왔어요! 🎉");
   }
+  // 백업 리마인드: 14일 경과 또는 마지막 백업 후 15건+ 쌓이면 표시
+  function updateBackupReminder(){
+    var el=document.getElementById("backupReminder"); if(!el) return;
+    var total=totalEntries();
+    var days=Math.floor((Date.now()-(state.lastBackupAt||Date.now()))/86400000);
+    var newSince=total-(state.lastBackupEntryCount||0);
+    var due = total>0 && (days>=14 || newSince>=15);
+    if(due && !remindSnoozed && curTab==="now"){
+      $("brMsg").innerHTML = (days>=14)
+        ? "💾 백업한 지 <b>"+days+"일</b> 됐어요. 잠깐 백업해둘까요?"
+        : "💾 백업 후 기록이 <b>"+newSince+"건</b> 쌓였어요. 백업해둘까요?";
+      el.style.display="block";
+    } else { el.style.display="none"; }
+  }
+  function markBackedUp(){
+    state.lastBackupAt=Date.now();
+    state.lastBackupEntryCount=totalEntries();
+    save(); updateBackupReminder();
+  }
+
   function openBackup(){
     openModal(`
       <h2>💾 데이터 백업 / 복원</h2>
@@ -597,6 +636,7 @@
         var txt=exportData();
         try{ await navigator.clipboard.writeText(txt); toast("백업 코드를 복사했어요 📋 메모장 등에 붙여 보관하세요"); }
         catch(e){ var ta=$("bPaste"); ta.value=txt; ta.focus(); ta.select(); toast("아래 칸에 코드를 넣었어요. 길게 눌러 복사하세요"); }
+        markBackedUp();
       };
       $("bFile").onclick=()=>{
         var blob=new Blob([exportData()],{type:"application/json"});
@@ -606,6 +646,7 @@
         a.download="million-backup-"+d.getFullYear()+z(d.getMonth()+1)+z(d.getDate())+".json";
         document.body.appendChild(a); a.click(); a.remove();
         toast("백업 파일을 저장했어요 📁");
+        markBackedUp();
       };
       $("bRestore").onclick=()=>{ var v=$("bPaste").value.trim(); if(!v){toast("백업 코드를 붙여넣어 주세요");return;} tryImport(v); };
       $("bFileIn").onchange=(e)=>{ var f=e.target.files[0]; if(!f) return; var r=new FileReader(); r.onload=()=>tryImport(String(r.result)); r.readAsText(f); };

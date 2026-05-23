@@ -647,6 +647,10 @@
       navigator.serviceWorker.register("sw.js").catch(function(){});
     });
   }
+  // 저장공간 '영구 보존' 요청 → 자동 삭제 방지 (지원 브라우저에서 적용)
+  if (navigator.storage && navigator.storage.persist) {
+    navigator.storage.persisted().then(function(p){ if(!p) navigator.storage.persist(); }).catch(function(){});
+  }
 </script>
 </body>
 </html>
